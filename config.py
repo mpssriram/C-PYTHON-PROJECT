@@ -1,59 +1,50 @@
 # config.py
-from __future__ import annotations
-
-from pathlib import Path
-from typing import Any, Dict, Optional
-
+# config.py
 import yaml
+from pathlib import Path
 
 
 class Config:
-    def __init__(self, config_path: str = "config.yaml"):
+    def __init__(self, config_path="config.yaml"):
         self.config_path = Path(config_path)
-        self._data: Dict[str, Any] = self._load_yaml()
+        self._data = self._load_yaml()
 
-        # ----- App -----
+        # ---- App ----
         self.APP_NAME = self._get("app.name")
         self.DEBUG = self._get("app.debug", False)
+        self.UPLOAD_FOLDER = self._get("app.upload_folder", "uploads")
+        self.MAX_CONTENT_LENGTH = self._get("app.max_content_length")
 
-        # ----- Server -----
+        # ---- Server ----
         self.HOST = self._get("server.host", "127.0.0.1")
         self.PORT = self._get("server.port", 5000)
 
-        # ----- Database -----
+        # ---- Database ----
         self.DB_TYPE = self._get("database.type")
-
-        # Keep DB_PATH for compatibility (used for sqlite-style setups)
         self.DB_PATH = self._get("database.path")
 
-        # ----- CSV -----
-        self.CSV_DELIMITER = self._get("csv.delimiter", ",")
-        self.CSV_HAS_HEADER = self._get("csv.has_header", True)
-        self.CSV_ENCODING = self._get("csv.encoding", "utf-8")
+        # ---- Images ----
+        self.ALLOWED_EXTENSIONS = set(
+            self._get("images.allowed_extensions", [])
+        )
 
-        # ----- Files -----
-        self.ALLOWED_EXTENSIONS = set(self._get("files.allowed_extensions", ["csv"]))
+        # ---- Metadata ----
+        self.METADATA_FILE = self._get("metadata.file", "image_metadata.json")
 
-        # ----- Metadata -----
-        self.METADATA_FILE = self._get("metadata.file", "csv_metadata.json")
-
-    def _load_yaml(self) -> Dict[str, Any]:
+    # ---------------------
+    # Internal helpers
+    # ---------------------
+    def _load_yaml(self):
         if not self.config_path.exists():
-            raise FileNotFoundError(f"Config file does not exist: {self.config_path}")
+            raise FileNotFoundError(f"Config file not found: {self.config_path}")
 
-        with open(self.config_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-            return data or {}
-
-    def _get(self, dotted_key: str, default: Any = None) -> Any:
-        """
-        Reads nested config using dot notation:
-          _get("database.host") -> self._data["database"]["host"]
-
-        Returns default if any key is missing.
-        """
+        with self.config_path.open("r") as f:
+            
+            return yaml.safe_load(f) or {}
+    def _get(self, dotted_key, default=None):
+        
         keys = dotted_key.split(".")
-        value: Any = self._data
+        value = self._data
 
         for k in keys:
             if not isinstance(value, dict) or k not in value:
@@ -61,5 +52,8 @@ class Config:
             value = value[k]
 
         return value
-
+    def as_dict(self):
+        return self._data
+if __name__ == "__main__":
+    config = Config()
     
