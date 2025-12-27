@@ -1,0 +1,29 @@
+app:
+  name: ImageGallery
+  debug: true
+  upload_folder: "C:/2 WEEK PROJECT/sample_images"
+  max_content_length: 16777216  # 16 MB
+
+server:
+  host: 0.0.0.0
+  port: 5000
+
+database:
+  type: mysql
+  host: localhost
+  user: root
+  password: "1234"
+  database: image_db
+  path: data/app.db
+  table: image_info
+
+images:
+  allowed_extensions:
+    - png
+    - jpg
+    - jpeg
+    - gif
+    - heic
+
+metadata:
+  file: image_metadata.json

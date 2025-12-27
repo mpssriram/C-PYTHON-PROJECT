@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>My Image Gallery</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <div class="page">
+    <header class="header">
+      <h1>My Image Gallery</h1>
+    </header>
+
+    <!-- Search -->
+    <form class="searchbar" method="get" action="{{ url_for('gallery') }}">
+      <input
+        type="text"
+        name="q"
+        class="search-input"
+        placeholder="Search by exact filename (IMG_9938.jpg)"
+        value="{{ q }}"
+      >
+
+      <input
+        type="date"
+        name="date"
+        class="search-date"
+        value="{{ date }}"
+      >
+
+      <input
+        type="text"
+        name="g"
+        class="search-input"
+        placeholder="Search by tags"
+        value="{{ g }}"
+      >
+
+      <button type="submit" class="search-btn">Search</button>
+      <a href="{{ url_for('gallery') }}" class="clear-btn">Clear</a>
+    </form>
+
+    <main class="grid">
+      {% for img in images %}
+        <div class="card">
+          <div class="thumb">
+            <a href="{{ url_for('uploads', relpath=img.relpath) }}" target="_blank">
+              <img src="{{ url_for('uploads', relpath=img.relpath) }}" alt="{{ img.image_filename }}">
+            </a>
+          </div>
+
+          <div class="meta">
+            <div class="filename">{{ img.image_filename }}</div>
+
+            <div class="line">
+              <span class="label">DateTime:</span>
+              <span class="value">{{ img.exif_datetime if img.exif_datetime else "None" }}</span>
+            </div>
+
+            <div class="line">
+              <span class="label">Make:</span>
+              <span class="value">{{ img.exif_make if img.exif_make else "None" }}</span>
+            </div>
+
+            <div class="line">
+              <span class="label">Model:</span>
+              <span class="value">{{ img.exif_model if img.exif_model else "None" }}</span>
+            </div>
+
+            <div class="line">
+              <span class="label">Tags:</span>
+              <span class="value">{{ img.exif_xpkeywords or "None" }}</span>
+            </div>
+
+            <!-- Buttons -->
+            <div class="line" style="margin-top:8px;">
+              <a class="search-btn" href="{{ url_for('uploads', relpath=img.relpath) }}" target="_blank">
+                Open
+              </a>
+
+              <button type="button" class="search-btn" onclick="toggleForm('f{{ loop.index }}')">
+                Edit tags
+              </button>
+
+              <button type="button" class="search-btn" onclick="toggleForm('m{{ loop.index }}')">
+                Edit meta
+              </button>
+            </div>
+
+            <!-- TAGS form -->
+            <form id="f{{ loop.index }}" method="POST" action="/edit"
+                  style="display:none; margin-top:8px;">
+              <input type="hidden" name="mode" value="tags">
+              <input type="hidden" name="file" value="{{ img.relpath }}">
+
+              <input type="text" name="r"
+                     placeholder="Enter tags like: sunrise,mountains"
+                     class="search-input">
+
+              <div style="margin-top:6px;">
+                <button type="submit" class="search-btn" name="edit" value="add">Add</button>
+                <button type="submit" class="clear-btn" name="edit" value="delete">Delete</button>
+                <button type="button" class="clear-btn" onclick="toggleForm('f{{ loop.index }}')">Cancel</button>
+              </div>
+            </form>
+
+            <!-- META form -->
+            <form id="m{{ loop.index }}" method="POST" action="/edit"
+                  style="display:none; margin-top:8px;">
+              <input type="hidden" name="mode" value="meta">
+              <input type="hidden" name="file" value="{{ img.relpath }}">
+
+              <input type="text" name="exif_datetime"
+                     placeholder="YYYY-MM-DD or YYYY-MM-DD HH:MM:SS"
+                     class="search-input"
+                     value="{{ img.exif_datetime or '' }}">
+
+              <input type="text" name="exif_make"
+                     placeholder="Make"
+                     class="search-input"
+                     style="margin-top:6px;"
+                     value="{{ img.exif_make or '' }}">
+
+              <input type="text" name="exif_model"
+                     placeholder="Model"
+                     class="search-input"
+                     style="margin-top:6px;"
+                     value="{{ img.exif_model or '' }}">
+
+              <div style="margin-top:6px;">
+                <button type="submit" class="search-btn" name="edit" value="meta_save">Save</button>
+                <button type="button" class="clear-btn" onclick="toggleForm('m{{ loop.index }}')">Cancel</button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      {% endfor %}
+    </main>
+
+    {% if images|length == 0 %}
+      <div class="empty">No images found in the database.</div>
+    {% endif %}
+  </div>
+
+  <script>
+    function toggleForm(id){
+      const el = document.getElementById(id);
+      el.style.display = (el.style.display === "none" || el.style.display === "")
+        ? "block"
+        : "none";
+    }
+  </script>
+</body>
+</html>
+
+
